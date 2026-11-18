@@ -1,0 +1,19 @@
+{
+  "Narrador": {
+    "voz_es": "ES (Mexico) - Jorge (Hombre Profundo)",
+    "voz_en": "EN (US) - Brian (Hombre Profundo)",
+    "rate": "+0%",
+    "pitch": "+0Hz",
+    "volume": "+0%"
+  },
+  "PersonajePrueba": {
+    "voz_es": "ES (Mexico) - Dalia (Mujer Calida)",
+    "voz_en": "EN (US) - Emma (Mujer Clara)",
+    "rate": "+0%",
+    "pitch": "+2Hz",
+    "volume": "+0%",
+    "motor": "Auto",
+    "voz_propia_muestra": "",
+    "asignada_por": "Auto-Casting IA"
+  }
+}

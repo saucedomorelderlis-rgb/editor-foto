@@ -1,0 +1,35 @@
+﻿# Entorno portable de Windows
+python_embed/
+__pycache__/
+*.pyc
+*.pyo
+
+# Modelos pesados (van en Google Drive, superan limite de GitHub)
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.onnx
+modelos/*.zip
+modelos/ChatTTS-main/
+modelos/diffusers-main/
+modelos/StoryDiffusion-main/
+
+# Archivos compilados y temporales
+*.dll
+*.so
+*.zip
+cloudflared
+req_colab.txt
+
+# Resultados generados
+resultados/imagenes/*
+resultados/audios/*
+resultados/videos/*
+resultados/documentos/*
+!resultados/**/.gitkeep
+
+# Seguridad: NO subir API Keys ni Tokens privados a GitHub
+proyectos/config_estudio.json
+proyectos/respaldo_local/

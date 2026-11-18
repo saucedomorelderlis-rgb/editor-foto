@@ -1,0 +1,23 @@
+﻿# PEGA ESTE CODIGO EN UNA CELDA DE GOOGLE COLAB (CON GPU T4 ACTIVADA)
+from google.colab import drive
+drive.mount('/content/drive')
+
+!mkdir -p /content/estudio
+!cp -r "/content/drive/MyDrive/editor_foto/"* /content/estudio/
+%cd /content/estudio
+!unzip -o estudio_nube.zip
+!pip install -q -r requirements.txt
+
+!curl -L --output cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+!chmod +x cloudflared
+
+import subprocess, time, re
+get_ipython().system_raw('python3 src/app_web.py &')
+time.sleep(5)
+
+tunel = subprocess.Popen(['./cloudflared', 'tunnel', '--url', 'http://localhost:18789'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+for linea in tunel.stdout:
+    match = re.search(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com', linea)
+    if match:
+        print("\nURL PUBLICA DE TU ESTUDIO:", match.group(0))
+        break
