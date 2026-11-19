@@ -1,14 +1,15 @@
 ﻿from datetime import datetime
 from moviepy import ImageClip, AudioFileClip, concatenate_videoclips
 from motor_subtitulos import MotorSubtitulos
+from gestor_recursos_hardware import GestorRecursosHardware
 from config_rutas import VIDEO_OUT_DIR
 
-# Sub-parte 22.1: Sincronizacion exacta al milisegundo entre imagen, audio y subtitulos
 class SincronizadorPrecisionAV:
     def __init__(self):
         self.subs = MotorSubtitulos()
 
     def compilar_bloque_sincronizado(self, escenas_bloque, idioma_audio="es", modo_subs="Ambos (ES + EN)", fps=24, nombre_archivo="bloque"):
+        nucleos = GestorRecursosHardware.configurar_hilos_cpu_ram()
         clips = []
         srt_lineas = []
         cursor_tiempo = 0.0
@@ -40,7 +41,16 @@ class SincronizadorPrecisionAV:
         mp4_salida = VIDEO_OUT_DIR / f"{nombre_archivo}_{idioma_audio}_{ts}.mp4"
         srt_salida = VIDEO_OUT_DIR / f"{nombre_archivo}_{idioma_audio}_{ts}.srt"
 
-        video_bloque.write_videofile(str(mp4_salida), fps=fps, codec="libx264", audio_codec="aac", logger=None)
+        # Renderizado multi-hilo usando toda la RAM normal y todos los nucleos CPU disponibles
+        video_bloque.write_videofile(
+            str(mp4_salida),
+            fps=fps,
+            codec="libx264",
+            audio_codec="aac",
+            threads=nucleos,
+            preset="medium",
+            logger=None
+        )
         srt_salida.write_text("\n".join(srt_lineas), encoding="utf-8")
 
         for c in clips:

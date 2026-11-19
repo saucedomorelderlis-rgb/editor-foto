@@ -1,6 +1,9 @@
-﻿from datetime import datetime
+﻿import os
+os.environ["ORT_TENSORRT_UNAVAILABLE"] = "1"
+from datetime import datetime
 import soundfile as sf
 from kokoro_onnx import Kokoro
+from gestor_recursos_hardware import GestorRecursosHardware
 from config_rutas import MODELS_DIR, AUDIO_OUT_DIR
 
 KOKORO_DIR = MODELS_DIR / "kokoro"
@@ -25,6 +28,7 @@ class MotorKokoroOpenSource:
         self.kokoro = None
 
     def cargar(self):
+        GestorRecursosHardware.configurar_hilos_cpu_ram()
         if self.kokoro is None and MODEL_PATH.exists() and VOICES_PATH.exists():
             self.kokoro = Kokoro(str(MODEL_PATH), str(VOICES_PATH))
 

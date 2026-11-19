@@ -1,6 +1,7 @@
 ﻿import json
 import re
 import asyncio
+import threading
 from datetime import datetime
 import edge_tts
 from config_rutas import PERFILES_VOCES_PATH, AUDIO_OUT_DIR
@@ -39,7 +40,6 @@ class GestorVoces:
     def guardar_disco(self):
         PERFILES_VOCES_PATH.write_text(json.dumps(self.perfiles, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    # Sub-parte 4.2: Limpieza estricta de prefijos y sintesis neural afinada
     def limpiar_nombre_personaje(self, personaje, texto):
         patron = rf"^\s*[\[\(]?{re.escape(personaje.strip())}[\]\)]?\s*[:\-]\s*"
         limpio = re.sub(patron, "", str(texto).strip(), flags=re.IGNORECASE)
@@ -49,18 +49,42 @@ class GestorVoces:
         comm = edge_tts.Communicate(text=texto, voice=voice_id, rate=rate, pitch=pitch, volume=volume)
         await comm.save(str(salida))
 
+    def _ejecutar_seguro_async(self, coro):
+        try:
+            asyncio.get_running_loop()
+            en_bucle = True
+        except RuntimeError:
+            en_bucle = False
+
+        if not en_bucle:
+            asyncio.run(coro)
+        else:
+            error_hilo = []
+            def _runner():
+                try:
+                    asyncio.run(coro)
+                except Exception as exc:
+                    error_hilo.append(exc)
+            t = threading.Thread(target=_runner)
+            t.start()
+            t.join()
+            if error_hilo:
+                raise error_hilo
+
     def sintetizar_con_perfil(self, personaje, texto, perfil, idioma="es", tag="esc"):
         texto_limpio = self.limpiar_nombre_personaje(personaje, texto)
         clave_voz = perfil.get("voz_es") if idioma == "es" else perfil.get("voz_en")
         info_voz = VOCES_DISPONIBLES.get(clave_voz) or VOCES_DISPONIBLES["ES (Mexico) - Jorge (Hombre Profundo)"]
         ruta = AUDIO_OUT_DIR / f"{tag}_{idioma}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.mp3"
 
-        asyncio.run(self._sintetizar_edge_async(
-            texto_limpio,
-            info_voz["id"],
-            perfil.get("rate", "+0%"),
-            perfil.get("pitch", "+0Hz"),
-            perfil.get("volume", "+0%"),
-            ruta
-        ))
+        self._ejecutar_seguro_async(
+            self._sintetizar_edge_async(
+                texto_limpio,
+                info_voz["id"],
+                perfil.get("rate", "+0%"),
+                perfil.get("pitch", "+0Hz"),
+                perfil.get("volume", "+0%"),
+                ruta
+            )
+        )
         return str(ruta), texto_limpio
